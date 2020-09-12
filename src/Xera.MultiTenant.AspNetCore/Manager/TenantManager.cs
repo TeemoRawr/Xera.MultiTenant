@@ -20,7 +20,7 @@ namespace Xera.MultiTenant.AspNetCore.Manager
 
         public void RemoveMemoryTenant(Tenant tenant)
         {
-            _tenantStorage.RemoveMemoryTenant(tenant);
+            _tenantStorage.RemoveTenant(tenant);
         }
 
         public Tenant GetById(Guid tenantId)

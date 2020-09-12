@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xera.MultiTenant.AspNetCore.Contracts;
-using Xera.MultiTenant.AspNetCore.Manager;
 
 namespace Xera.MultiTenant.AspNetCore.Storages
 {
@@ -17,7 +16,7 @@ namespace Xera.MultiTenant.AspNetCore.Storages
 
         public MemoryTenantStorage(IEnumerable<Tenant> tenants)
         {
-            _tenants = new List<Tenant>();
+            _tenants = tenants.ToList();
         }
 
         public void AddTenant(Tenant tenant)
@@ -30,7 +29,7 @@ namespace Xera.MultiTenant.AspNetCore.Storages
             _tenants.Add(tenant);
         }
 
-        public void RemoveMemoryTenant(Tenant tenant)
+        public void RemoveTenant(Tenant tenant)
         {
             if (_tenants.All(t => t.TenantId != tenant.TenantId))
             {
@@ -38,6 +37,11 @@ namespace Xera.MultiTenant.AspNetCore.Storages
             }
 
             _tenants.Remove(tenant);
+        }
+
+        public IEnumerable<Tenant> GetAll()
+        {
+            return _tenants.ToList();
         }
 
         public Tenant GetById(Guid tenantId)
