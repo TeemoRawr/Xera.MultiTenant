@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Xera.MultiTenant.AspNetCore\Xera.MultiTenant.AspNetCore.csproj" />
+  </ItemGroup>
+
 </Project>
