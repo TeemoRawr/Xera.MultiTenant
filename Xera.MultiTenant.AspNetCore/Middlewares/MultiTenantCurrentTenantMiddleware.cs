@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xera.MultiTenant.AspNetCore.Contracts;
+using Xera.MultiTenant.AspNetCore.Manager;
 using Xera.MultiTenant.AspNetCore.Options;
 using Xera.MultiTenant.AspNetCore.Providers;
 
@@ -20,7 +22,8 @@ namespace Xera.MultiTenant.AspNetCore.Middlewares
 
         public async Task Invoke(
             HttpContext httpContext, 
-            ITenantProvider tenantProvider, 
+            ITenantProvider tenantProvider,
+            ITenantManager tenantManager,
             IOptions<MultiTenantOptions> multiTenantOptionsWrapper,
             ILogger<MultiTenantCurrentTenantMiddleware> logger = null)
         {
@@ -29,20 +32,36 @@ namespace Xera.MultiTenant.AspNetCore.Middlewares
             if (multiTenantOptionsOptions.TenantIdentificationSource != TenantIdentificationSource.None)
             {
                 Guid tenantId;
+                var tenantIdentificationSourceName = multiTenantOptionsOptions.TenantIdentificationSourceName;
 
                 if (multiTenantOptionsOptions.TenantIdentificationSource == TenantIdentificationSource.Headers)
                 {
-                    if (httpContext.Request.Headers.ContainsKey(
-                        multiTenantOptionsOptions.TenantIdentificationSourceName))
+                    if (httpContext.Request.Headers.ContainsKey(tenantIdentificationSourceName))
                     {
-                        var tenantIdAsString =
-                            httpContext.Request.Headers[multiTenantOptionsOptions.TenantIdentificationSourceName];
+                        var tenantIdAsString = httpContext.Request.Headers[tenantIdentificationSourceName];
 
                         if (!Guid.TryParse(tenantIdAsString, out tenantId))
                         {
                             logger?.LogWarning(
-                                $"Cannot set TenantId. Check header {multiTenantOptionsOptions.TenantIdentificationSourceName} has valid value");
+                                $"Cannot set TenantId. Check header {tenantIdentificationSourceName} has valid value");
                         }
+                    }
+                }
+                else if (multiTenantOptionsOptions.TenantIdentificationSource == TenantIdentificationSource.Claims)
+                {
+                    var claim = httpContext.User.Claims.SingleOrDefault(c => c.Type == tenantIdentificationSourceName);
+
+                    var tenantIdAsString = string.Empty;
+
+                    if (claim != null)
+                    {
+                        tenantIdAsString = claim.Value;
+                    }
+
+                    if (!Guid.TryParse(tenantIdAsString, out tenantId))
+                    {
+                        logger?.LogWarning(
+                            $"Cannot set TenantId. Check header {tenantIdentificationSourceName} has valid value");
                     }
                 }
                 else if (multiTenantOptionsOptions.TenantIdentificationSource == TenantIdentificationSource.Custom)
@@ -50,8 +69,7 @@ namespace Xera.MultiTenant.AspNetCore.Middlewares
                     tenantId = multiTenantOptionsOptions.TenantIdentificationCustomProvider(httpContext);
                 }
 
-                var tenant = new Tenant(tenantId);
-
+                var tenant = tenantManager.GetById(tenantId);
                 tenantProvider.SetCurrentTenant(tenant);
             }
 

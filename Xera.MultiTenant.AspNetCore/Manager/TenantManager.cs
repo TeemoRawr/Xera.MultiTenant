@@ -1,37 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Xera.MultiTenant.AspNetCore.Contracts;
+using Xera.MultiTenant.AspNetCore.Storages;
 
 namespace Xera.MultiTenant.AspNetCore.Manager
 {
     public class TenantManager : ITenantManager
     {
-        private readonly ICollection<Tenant> _tenants;
+        private readonly ITenantStorage _tenantStorage;
 
-        public TenantManager()
+        public TenantManager(ITenantStorage tenantStorage)
         {
-            _tenants = new List<Tenant>();
+            _tenantStorage = tenantStorage;
         }
 
-        public void AddMemoryTenant(Tenant tenant)
+        public void AddTenant(Tenant tenant)
         {
-            if (_tenants.Any(t => t.TenantId == tenant.TenantId))
-            {
-                throw new Exception("Cannot add tenant with the same id");
-            }
-
-            _tenants.Add(tenant);
+            _tenantStorage.AddTenant(tenant);
         }
 
         public void RemoveMemoryTenant(Tenant tenant)
         {
-            if (_tenants.All(t => t.TenantId != tenant.TenantId))
-            {
-                throw new Exception($"Cannot find tenant with id {tenant.TenantId}");
-            }
+            _tenantStorage.RemoveMemoryTenant(tenant);
+        }
 
-            _tenants.Remove(tenant);
+        public Tenant GetById(Guid tenantId)
+        {
+            return _tenantStorage.GetById(tenantId);
         }
     }
 }

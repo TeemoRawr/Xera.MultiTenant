@@ -3,6 +3,7 @@
     public enum TenantIdentificationSource
     {
         Headers,
+        Claims,
         None,
         Custom
     }

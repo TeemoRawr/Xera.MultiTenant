@@ -1,10 +1,14 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Xera.MultiTenant.AspNetCore.Contracts;
 using Xera.MultiTenant.AspNetCore.Extensions;
 using Xera.MultiTenant.AspNetCore.Options;
+using Xera.MultiTenant.AspNetCore.Storages;
 
 namespace Xera.MultiTenant.AspNetCore.Test.Environment
 {
@@ -25,6 +29,12 @@ namespace Xera.MultiTenant.AspNetCore.Test.Environment
             services.AddMultiTenant(builder =>
             {
                 builder.SetTenantIdentificationSource(TenantIdentificationSource.Custom);
+                builder.SetTenantIdentificationCustomProvider(context => Guid.NewGuid());
+
+                builder.SetTenantStorage(new MemoryTenantStorage(new List<Tenant>
+                {
+                    Tenant.Create(Guid.NewGuid(), "", "", "", 0, "", "")
+                }));
             });
         }
 
